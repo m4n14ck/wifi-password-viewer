@@ -19,3 +19,4 @@ WiFi Password Viewer & Exporter es una herramienta gráfica desarrollada en Pyth
 🚀 Fácil de Usar: Instrucciones claras y botones intuitivos.
 
 🖼️ Capturas de Pantalla
+![image](https://github.com/user-attachments/assets/d4dd10cb-2368-4d34-bac2-87aa9f8a940a)
