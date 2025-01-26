@@ -36,3 +36,18 @@ ________________________________________________________________________________
 ![image](https://github.com/user-attachments/assets/0ddb87e2-ec1f-491d-8629-f0a170e4812a)
 
 __________________________________________________________________________________________
+
+![image](https://github.com/user-attachments/assets/e4901982-b00a-4c52-94dd-bae01321f83f)
+
+__________________________________________________________________________________________
+
+![image](https://github.com/user-attachments/assets/8cb341b7-83fd-4c40-98dc-31e6572251bb)
+
+__________________________________________________________________________________________
+
+🛠️ Cómo Usar
+Clona el Repositorio:
+
+git clone https://github.com/tuusuario/wifi-password-viewer.git
+cd wifi-password-viewer
+
