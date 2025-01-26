@@ -48,6 +48,6 @@ ________________________________________________________________________________
 🛠️ Cómo Usar
 Clona el Repositorio:
 
-git clone https://github.com/tuusuario/wifi-password-viewer.git
+git clone https://github.com/m4n14ck/wifi-password-viewer.git
 cd wifi-password-viewer
 
