@@ -3,15 +3,43 @@ import subprocess
 import unicodedata
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit,
-    QLineEdit, QPushButton, QWidget, QScrollArea, QFrame, QMessageBox
+    QLineEdit, QPushButton, QWidget, QScrollArea, QFrame, QMessageBox, QDialog
 )
-from PyQt5.QtGui import QFont, QGuiApplication
+from PyQt5.QtGui import QFont, QGuiApplication, QPixmap
 from PyQt5.QtCore import Qt
-
+import qrcode
+from PIL import Image
 
 def limpiar_nombre_red(nombre):
     """Normaliza el nombre de la red eliminando caracteres no ASCII."""
     return ''.join(c for c in unicodedata.normalize('NFKD', nombre) if ord(c) < 128)
+
+
+class QRWindow(QDialog):
+    """Ventana flotante para mostrar el código QR."""
+    def __init__(self, qr_img_path, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Código QR de la Red")
+        self.setGeometry(300, 300, 300, 300)
+        self.setStyleSheet("background-color: #121212; color: #ffffff;")
+
+        layout = QVBoxLayout(self)
+
+        # Mostrar el código QR
+        qr_label = QLabel(self)
+        pixmap = QPixmap(qr_img_path)
+        qr_label.setPixmap(pixmap)
+        qr_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(qr_label)
+
+        # Botón para cerrar la ventana
+        close_button = QPushButton("Cerrar", self)
+        close_button.setStyleSheet(
+            "background-color: #333333; color: #ffcc00; font-size: 14px; padding: 10px 15px; "
+            "border-radius: 5px; border: 1px solid #555555;"
+        )
+        close_button.clicked.connect(self.close)
+        layout.addWidget(close_button)
 
 
 class WifiApp(QMainWindow):
@@ -41,6 +69,7 @@ class WifiApp(QMainWindow):
             "- Usa 'Copiar Contraseña' para copiar.\n"
             "- 'Exportar Datos' guarda en un archivo.\n"
             "- Botón 'Limpiar' borra todo el contenido.\n"
+            "- 'Generar QR' para crear un código QR de la red seleccionada.\n"
         )
         instructions.setFont(QFont("Arial", 12))
         instructions.setStyleSheet("color: #b0b0b0; margin: 5px;")
@@ -76,6 +105,7 @@ class WifiApp(QMainWindow):
             ("Copiar Contraseña", self.copiar_contrasena),
             ("Exportar Datos", self.exportar_datos),
             ("Limpiar", self.limpiar_texto),
+            ("Generar QR", self.generar_qr),
         ]
         for texto, funcion in botones:
             input_layout.addWidget(self.crear_boton(texto, funcion))
@@ -143,6 +173,49 @@ class WifiApp(QMainWindow):
     def limpiar_texto(self):
         self.redes_texto.clear()
         self.contrasena_texto.clear()
+
+    def generar_qr(self):
+        clave = self.red_input.text().strip()
+        if not clave:
+            QMessageBox.warning(self, "Generar QR", "Debe ingresar el nombre de la red.")
+            return
+
+        clave_limpia = limpiar_nombre_red(clave)
+        resultado = self.ejecutar_comando(f'netsh wlan show profile name="{clave_limpia}" key=clear')
+
+        if "Perfil de" not in resultado:
+            QMessageBox.warning(self, "Generar QR", f"No se encontró el perfil para '{clave}'.")
+            return
+
+        # Extraer la contraseña de la red
+        for linea in resultado.splitlines():
+            if "Contenido de la clave" in linea:
+                contrasena = linea.split(":")[1].strip()
+                break
+        else:
+            QMessageBox.warning(self, "Generar QR", "No se pudo encontrar la contraseña de la red.")
+            return
+
+        # Crear el texto para el código QR
+        qr_text = f"WIFI:S:{clave_limpia};T:WPA;P:{contrasena};;"
+
+        # Generar el código QR
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(qr_text)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="white")
+        qr_img_path = "wifi_qr.png"
+        img.save(qr_img_path)
+
+        # Mostrar el código QR en una ventana flotante
+        self.qr_window = QRWindow(qr_img_path, self)
+        self.qr_window.exec_()
 
 
 if __name__ == "__main__":
